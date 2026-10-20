@@ -3,7 +3,6 @@ import { ArrowDown, ArrowRight, ArrowUpRight, Download, Github, Linkedin, Mail }
 import { motion, useMotionValue, useSpring, useTransform } from 'motion/react';
 import { asset } from '../data/assets';
 import { person } from '../data/portfolio';
-import HalftoneReveal from './HalftoneReveal';
 import { TypographyVortexCanvas } from '@designcodeio/threeui';
 import '@designcodeio/threeui/style.css';
 
@@ -38,8 +37,6 @@ class ThreeUIBoundary extends Component<ThreeUIBoundaryProps, ThreeUIBoundarySta
 }
 
 export default function Hero() {
-  const [canUseHalftone, setCanUseHalftone] = useState<boolean>(false);
-  const [halftoneFailed, setHalftoneFailed] = useState<boolean>(false);
   const [canUseThreeUI, setCanUseThreeUI] = useState<boolean>(false);
   const [isHeroInView, setIsHeroInView] = useState<boolean>(true);
   const [canTilt, setCanTilt] = useState<boolean>(false);
@@ -73,21 +70,15 @@ export default function Hero() {
 
     const evaluate = () => {
       try {
-        const testCanvas = document.createElement('canvas');
-        const gl = testCanvas.getContext('webgl2');
-        const hasWebGL2 = Boolean(gl);
-
         const eligible =
           !mediaReducedMotion.matches &&
           mediaHover.matches &&
           mediaWidth.matches;
 
         setCanTilt(eligible);
-        setCanUseHalftone(eligible && hasWebGL2);
         setCanUseThreeUI(eligible);
       } catch {
         setCanTilt(false);
-        setCanUseHalftone(false);
         setCanUseThreeUI(false);
       }
     };
@@ -238,37 +229,13 @@ export default function Hero() {
 
         <div className="hero-visual" aria-label="Portrait of Harshitha S">
           <div className="visual-grid" aria-hidden="true" />
-          <div
-            className="hero-portrait-frame"
-            title={canUseHalftone && !halftoneFailed ? "Interactive halftone portrait — move cursor to reveal photo" : undefined}
-          >
+          <div className="hero-portrait-frame">
             <img
               src={asset('images/portrait-business.webp')}
               alt="Harshitha S — Software Developer"
               fetchPriority="high"
               className="hero-static-portrait"
             />
-            {canUseHalftone && !halftoneFailed && (
-              <HalftoneReveal
-                src={asset('images/portrait-business.webp')}
-                fit="cover"
-                originY={0.2}
-                mode="mono"
-                shape="dot"
-                cellSize={5}
-                dotScale={0.92}
-                paperColor="#ebebef"
-                inkColor="#0b0b0d"
-                contrast={1.16}
-                revealRadius={140}
-                softness={0.65}
-                linger={1.3}
-                wander={false}
-                intro={false}
-                className="hero-halftone-layer"
-                onError={() => setHalftoneFailed(true)}
-              />
-            )}
           </div>
           <span className="visual-corner visual-corner-top" aria-hidden="true" />
           <span className="visual-corner visual-corner-bottom" aria-hidden="true" />

@@ -24,6 +24,11 @@ export type Project = {
     knownF1: string;
     unseenF1: string;
   }[];
+  testResultsSummary?: {
+    totalTests: string;
+    description: string;
+    testSuites: { name: string; passed: number; total: number }[];
+  };
   limitations?: string[];
   workflow?: {
     stage: string;
@@ -34,6 +39,11 @@ export type Project = {
     client: string;
     server: string;
     dataFlow: string[];
+  };
+  safetyGate?: {
+    title: string;
+    description: string;
+    points: { label: string; text: string }[];
   };
   features: {
     title: string;
@@ -147,6 +157,15 @@ export const projects: Project[] = [
         'Stage 06: SQLite WAL Logging, HMAC-SHA256 Signing & ReportLab PDF Export',
       ],
     },
+    safetyGate: {
+      title: 'Fail-Closed Input Safety & Out-Of-Distribution Rejection Gate',
+      description: 'Industrial inspection lines strictly require fail-closed execution. To prevent false confidence scores on distorted or out-of-distribution uploads, the system implements an upfront safety barrier:',
+      points: [
+        { label: 'Image Quality Precheck', text: 'Discards blank, severely underexposed, or heavily blurred frames before model dispatch.' },
+        { label: 'OpenCLIP Centroid Validation', text: 'Compares visual embeddings against reference nominal centroid vectors (category_validation_centroids.npz) and rejects wrong-category uploads.' },
+        { label: 'Fail-Closed Guarantee', text: 'When an input fails the safety gate, no derived anomaly maps or speculative scores are produced.' },
+      ],
+    },
     features: [
       { title: 'Multi-Modal Specialist Fusion', detail: 'Combines EfficientAD student-teacher distillation with PatchCore neighborhood coreset memory banks.' },
       { title: 'Statistical EVT Tail Calibration', detail: 'Replaces empirical threshold guesswork with 3-parameter Weibull extreme value distribution tail modeling.' },
@@ -201,10 +220,119 @@ export const projects: Project[] = [
     statusNotes: 'Production-ready college major project submission (2026). Publicly accessible live deployment and open-source repository.',
   },
   {
+    title: 'Nathasha — Privacy-First Hybrid AI Assistant',
+    category: 'AI & Machine Learning',
+    tag: 'Privacy-First Hybrid AI Assistant & Local Inference',
+    number: '02',
+    shortProblem: 'Cloud-only assistants expose private conversation data and incur unpredictable API fees, while purely local models risk resource exhaustion on laptop hardware.',
+    shortSolution: 'Local-first intelligent assistant uniting private Ollama inference with optional free-tier OpenRouter cloud routing, hardware-aware concurrency control, and persistent PostgreSQL chat history.',
+    description: 'Local-first intelligent AI assistant that combines private Ollama inference with optional free-tier OpenRouter cloud routing, streamed conversations, persistent chat history, and a responsive React UI.',
+    overview: 'Nathasha (ನಾಥಾಶಾ) is an original, modular, open-source-first intelligent AI assistant built from the ground up for privacy, local-first execution, and extensible hybrid workflows. Designed specifically for personal workstations and laptops, it couples private local inference via Ollama with optional zero-cost OpenRouter cloud models, safeguarded by strict consent boundaries and hardware-aware concurrency limits.',
+    problem: 'Modern proprietary AI assistants route all user queries and conversational context to centralized cloud infrastructure, compromising privacy and creating dependency on subscription billing. Conversely, running large language models locally on consumer laptops with integrated graphics often triggers severe thermal throttling, memory thrashing, and unhandled Out-Of-Memory crashes without intelligent scheduling.',
+    approach: 'Engineered a multi-tier hybrid architecture with a FastAPI backend and React/TypeScript frontend. In Private mode, all processing executes strictly locally through Ollama (Qwen2.5 1.5B) under an asyncio.Semaphore(1) hardware guard with zero cloud egress. An optional Auto/Cloud mode connects to verified free-tier OpenRouter models only after explicit user consent, falling back smoothly to local inference if network connectivity drops.',
+    metrics: [
+      { value: 'Zero Egress', label: 'Private Sandbox', note: 'Strict zero-cloud local execution in private mode' },
+      { value: '37 / 37', label: 'Backend Tests', note: 'Passing tests reported in repository implementation report' },
+      { value: 'Sem(1)', label: 'Hardware Guard', note: 'Bounded local concurrency protecting 16GB host memory' },
+    ],
+    workflow: [
+      { stage: '01', name: 'Mode & Intent Routing', detail: 'Evaluates user mode selection (Auto, Cloud, Private) and verifies cloud consent status before query dispatch.' },
+      { stage: '02', name: 'Hardware & Guardrail Check', detail: 'Applies payload bounds (32k char limit) and acquires an asynchronous concurrency semaphore to protect host RAM.' },
+      { stage: '03', name: 'Inference Execution', detail: 'Dispatches query to Ollama (Qwen2.5 1.5B) or OpenRouter free tier with SSE token streaming.' },
+      { stage: '04', name: 'Streamed Delivery & Error Envelope', detail: 'Pumps real-time tokens to React UI with zero-token fallback handling and graceful error envelopes.' },
+      { stage: '05', name: 'Persistent PostgreSQL Commit', detail: 'Asynchronously commits message history and thread state into PostgreSQL 16 with user-scoped isolation.' },
+    ],
+    architecture: {
+      client: 'React 18 single-page application built with Vite, TypeScript, Tailwind CSS, Lucide icons, and an interactive 3D WebGL Crystalized Ball rendering via OGL.',
+      server: 'FastAPI backend in Python 3.12 with async HTTP connection pools, provider routing engine (Ollama + OpenRouter adapter), PostgreSQL 16 persistence via SQLAlchemy, and JWT authentication.',
+      dataFlow: [
+        'Client Stream Request with Mode (Auto / Cloud / Private)',
+        'Provider Router & Cloud Consent Verification Barrier',
+        'Asyncio Concurrency Semaphore Acquisition (Sem=1)',
+        'Local Ollama HTTP Stream / Free OpenRouter SSE Stream',
+        'Server-Sent Events (SSE) Token Pumping to React UI',
+        'PostgreSQL 16 Asynchronous Conversation History Commit',
+      ],
+    },
+    safetyGate: {
+      title: 'Consent-Bound Privacy Gate & Hardware Concurrency Protection',
+      description: 'Nathasha implements rigorous privacy isolation and hardware protection gates to safeguard personal data and constrained host resources:',
+      points: [
+        { label: 'Strict Private Sandbox', text: 'In Private mode, inference executes entirely locally via Ollama with zero cloud network calls under any fallback condition.' },
+        { label: 'Cloud Consent & Zero-Cost Gate', text: 'Cloud routing to OpenRouter is locked behind explicit user consent and server-side pricing filters blocking paid models.' },
+        { label: 'Hardware Concurrency Semaphore', text: 'Enforces asyncio.Semaphore(1) to protect shared system RAM (1.7 GB headroom) and prevent Iris Xe GPU/CPU thrashing.' },
+      ],
+    },
+    features: [
+      { title: 'Three-Way Provider Router', detail: 'Seamless switching between Auto (smart network/readiness routing), Cloud (free-tier OpenRouter), and Private (zero-egress local Ollama).' },
+      { title: 'Strict Consent & Zero-Cost Guard', detail: 'Server-side enforcement ensures paid models are disabled by default and no cloud routing occurs without explicit user consent.' },
+      { title: 'Hardware-Aware Concurrency Control', detail: 'Bounded inference semaphore (asyncio.Semaphore(1)) prevents OS memory starvation on consumer hardware with 16GB RAM.' },
+      { title: 'Real-Time SSE Token Streaming', detail: 'Low-latency server-sent events deliver immediate first-token response directly to the React conversation viewport.' },
+      { title: 'Persistent PostgreSQL 16 History', detail: 'Structured relational storage for multi-thread conversation histories, messages, and metadata with user isolation.' },
+      { title: 'Session Security & Auth', detail: 'Secure user authentication with JWT tokens, session lifecycle management, and protected API endpoints.' },
+    ],
+    challenges: [
+      {
+        challenge: 'Preventing memory exhaustion and system lockups when running quantized LLMs on a laptop with integrated Iris Xe graphics.',
+        solution: 'Implemented an asyncio.Semaphore(1) concurrency lock on Ollama dispatch and isolated model storage and databases exclusively to Drive D:, protecting host operating system stability.',
+      },
+      {
+        challenge: 'Risk of inadvertent data egress or surprise API charges when incorporating cloud fallback capabilities.',
+        solution: 'Engineered an explicit provider router that enforces zero cloud egress in Private mode, strictly validates OpenRouter free-tier metadata (prompt=0.0, completion=0.0), and requires affirmative user consent.',
+      },
+      {
+        challenge: 'Handling transient cloud stream failures without duplicating conversational output.',
+        solution: 'Implemented a pre-token fallback mechanism that permits seamless failover to local Ollama only if zero tokens have been emitted, preventing confusing partial message replays.',
+      },
+    ],
+    testResultsSummary: {
+      totalTests: '37 / 37',
+      description: 'The repository implementation report (IMPLEMENTATION_STATUS.md) documents 37/37 automated backend tests passed across core modules with 100% pass rate. (Attributed to documented implementation report).',
+      testSuites: [
+        { name: 'Authentication & Tokens (tests/test_auth.py)', passed: 6, total: 6 },
+        { name: 'Streaming Chat Service (tests/test_chat.py)', passed: 6, total: 6 },
+        { name: 'App Configuration & Security (tests/test_config.py)', passed: 3, total: 3 },
+        { name: 'Conversation State & CRUD (tests/test_conversations.py)', passed: 6, total: 6 },
+        { name: 'Host Hardware Environment (tests/test_environment.py)', passed: 3, total: 3 },
+        { name: 'System Health Probes (tests/test_health.py)', passed: 3, total: 3 },
+        { name: 'Provider Router & Privacy Isolation (tests/test_provider_router.py)', passed: 10, total: 10 },
+      ],
+    },
+    stack: [
+      { name: 'React 18', role: 'Component hierarchy, conversation state, and interactive controls' },
+      { name: 'TypeScript', role: 'Type-safe contracts across frontend state and API payloads' },
+      { name: 'Vite', role: 'Fast build tooling and development server' },
+      { name: 'Tailwind CSS', role: 'Responsive layout and interface styling' },
+      { name: 'FastAPI', role: 'Asynchronous backend framework with SSE streaming' },
+      { name: 'Python 3.12', role: 'Core server runtime and orchestration engine' },
+      { name: 'PostgreSQL 16', role: 'Relational persistence for conversation threads and user data' },
+      { name: 'SQLAlchemy', role: 'Asynchronous ORM mapping and schema migrations' },
+      { name: 'Ollama', role: 'Local inference engine running quantized models' },
+      { name: 'Qwen2.5 1.5B', role: 'Compact local language model optimized for edge inference' },
+      { name: 'OpenRouter', role: 'Verified free-tier cloud model aggregation adapter' },
+      { name: 'JWT', role: 'Secure session tokens and user state verification' },
+      { name: 'SSE', role: 'Server-Sent Events for low-latency token streaming' },
+      { name: 'OGL / WebGL', role: 'Lightweight WebGL 3D Crystalized Ball visual identity' },
+    ],
+    limitations: [
+      'Local model inference throughput is constrained by laptop hardware (Intel Iris Xe integrated graphics, single-concurrency queue).',
+      'OpenRouter cloud mode is restricted strictly to free-tier model availability and subject to third-party rate limits.',
+      'Currently requires local hosting or network accessibility to Ollama and PostgreSQL instances; no hosted public web instance.',
+    ],
+    results: [
+      'Successfully engineered a local-first hybrid AI assistant balancing privacy and optional cloud intelligence.',
+      'Reported 37 / 37 automated backend test suite cases passing in repository implementation report.',
+      'Validated stable local token generation (~19.5 tokens/sec) on consumer laptop hardware without operating system crashes.',
+      'Verified strict zero-cloud egress enforcement under automated test isolation.',
+    ],
+    repository: 'https://github.com/HarshithaSatthish/Nathasha',
+    statusNotes: 'Open-source personal project on GitHub. Complete source code, test suites, and documentation verified in repository.',
+  },
+  {
     title: 'GlobalPulse',
     category: 'Full Stack & Web',
     tag: 'News Aggregation Platform',
-    number: '02',
+    number: '03',
     shortProblem: 'Readers experience information overload and fragmented feeds when tracking diverse international topics across disparate portals.',
     shortSolution: 'Full-stack news aggregation web application that normalizes multi-source news APIs into a clean, searchable, categorized reading interface.',
     description: 'Global news aggregation web application with API-driven news workflows and responsive categorization.',
@@ -213,7 +341,7 @@ export const projects: Project[] = [
     approach: 'Engineered a modular full-stack architecture with a Node.js/Express backend that consumes external REST news APIs, normalizes heterogeneous headline payloads, and caches article metadata in MongoDB. The React frontend provides instant search and responsive card-based reading layouts.',
     metrics: [
       { value: 'Multi-API', label: 'Feed Aggregation', note: 'Normalizes diverse external news endpoints' },
-      { value: '70%+', label: 'Network Reduction', note: 'Client-side 300ms input debouncing' },
+      { value: '300ms', label: 'Client Debounce', note: 'Client-side keystroke rate-limiting suppresses redundant network calls' },
       { value: 'Responsive', label: 'Layout Architecture', note: 'Mobile, tablet & desktop optimized' },
     ],
     architecture: {
@@ -240,7 +368,7 @@ export const projects: Project[] = [
       },
       {
         challenge: 'Unnecessary network roundtrips during rapid search input.',
-        solution: 'Implemented 300ms client debouncing on input change events, reducing API traffic by over 70%.',
+        solution: 'Implemented 300ms client debouncing on input change events, rate-limiting outbound requests and suppressing redundant network calls.',
       },
     ],
     stack: [
@@ -262,7 +390,7 @@ export const projects: Project[] = [
     title: 'Harbor',
     category: 'Full Stack & Web',
     tag: 'Personal Task Workspace',
-    number: '03',
+    number: '04',
     shortProblem: 'Context switching between rigid enterprise project tools and simple checklists leads to fragmented personal project planning.',
     shortSolution: 'Personal task management workspace featuring interactive list and board views, project-level grouping, and full-stack CRUD workflows.',
     description: 'Personal task management workspace with interactive list and board views.',
